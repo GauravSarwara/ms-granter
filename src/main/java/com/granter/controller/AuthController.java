@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.granter.dto.JwtResponse;
 import com.granter.dto.LoginRequest;
 import com.granter.dto.SignupRequest;
 import com.granter.service.UserService;
@@ -23,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthController {
 
 	private final UserService userService;
-
+	
 	@PostMapping("/signup")
 	public ResponseEntity<Object> signup(@RequestBody SignupRequest request) {
 

@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import com.granter.dto.JwtResponse;
 import com.granter.dto.LoginRequest;
 import com.granter.dto.SignupRequest;
+import com.granter.entity.GranterApplication;
 import com.granter.entity.User;
+import com.granter.repository.GranterApplicationRepository;
 import com.granter.repository.UserRepository;
 import com.granter.response.GenericResponsePojo;
 import com.granter.security.JwtUtil;
@@ -30,6 +32,7 @@ public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
 	private final JwtUtil jwtUtil;
 	private final EmailUtil emailUtil;
+	private final GranterApplicationRepository granterApplicationRepository;
 
 	private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -38,6 +41,12 @@ public class UserServiceImpl implements UserService {
 
 		log.info("Signup started {}", request.getEmail());
 
+		var userData=userRepository.findByEmail(request.getEmail());
+		if(userData!=null && userData.getEmail()!=null) {
+			var response=GenericResponsePojo.failure("User with this email already exists. ","");			
+			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		
 		User user = new User();
 
 		user.setFirstName(request.getFirstName());
@@ -48,7 +57,7 @@ public class UserServiceImpl implements UserService {
 		user.setProfessionType(request.getProfessionType());
 		user.setNationality(request.getNationality());
 		user.setEmailVerified(false);
-
+		user.setUserType("user");
 		userRepository.save(user);
 		
 		emailUtil.sendVerificationEmail(request.getEmail(),  Base64.getUrlEncoder().encodeToString(request.getEmail().getBytes()));
@@ -74,6 +83,11 @@ public class UserServiceImpl implements UserService {
 
 			ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
 		}
+		if (!user.getEmailVerified()) {
+			var response = new JwtResponse("Please verify your account .Please check you email box", "", "401");
+
+			ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+		}
 
 		String token = jwtUtil.generateToken(user.getEmail());
 		var response = new JwtResponse("Login successfully ", token, "200");
@@ -86,9 +100,14 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<Object> verifyAccount(String token) {
 		String email = new String(Base64.getUrlDecoder().decode(token));
 		User user=userRepository.findByEmail(email);
-		if(user!=null) {
+		if(user!=null && !user.getEmailVerified()) {
 			user.setEmailVerified(true);
 			userRepository.save(user);
+			GranterApplication application=new GranterApplication(); 
+			application.setUser(user);
+			application.setStatus("init");
+			application.setStep("0");
+			granterApplicationRepository.save(application);
 		}
 		var response=GenericResponsePojo.success("", "User verified successfully.");		
 		return ResponseEntity.ok(response);

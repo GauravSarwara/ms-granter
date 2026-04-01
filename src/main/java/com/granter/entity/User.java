@@ -23,6 +23,8 @@ public class User {
 
 	private String professionType;
 	private String nationality;
+	
+	private String userType;
 
 	private Boolean emailVerified;
 
