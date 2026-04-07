@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
 		if (!user.getEmailVerified()) {
 			var response = new JwtResponse("Please verify your account .Please check you email box", "", "401");
 
-			ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
 		}
 
 		String token = jwtUtil.generateToken(user.getEmail());
