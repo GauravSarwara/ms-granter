@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService {
 			userRepository.save(user);
 			GranterApplication application=new GranterApplication(); 
 			application.setUser(user);
-			application.setStatus("init");
+			application.setStatus(true);
 			application.setStep("0");
 			granterApplicationRepository.save(application);
 		}

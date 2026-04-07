@@ -23,4 +23,20 @@ public class JwtUtil {
 
 	}
 
+	public String extractEmail(String token) {
+	    return Jwts.parser()
+	            .setSigningKey(secret)
+	            .parseClaimsJws(token)
+	            .getBody()
+	            .getSubject();
+	}
+
+	public boolean validateToken(String token) {
+	    try {
+	        Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+	        return true;
+	    } catch (Exception e) {
+	        return false;
+	    }
+	}
 }

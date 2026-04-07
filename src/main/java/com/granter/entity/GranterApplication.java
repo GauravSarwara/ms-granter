@@ -20,30 +20,27 @@ public class GranterApplication {
     private User user;
 
     // Business Fields
-    @Column(name = "city")
-    private String city;
+    @Column(name = "address")
+    private String address;
 
     @Column(name = "status")
-    private String status;
+    private Boolean status;
     
     @Column(name = "step")
     private String step;
     
     @Column(name = "birth_date")
-    private String dateOfBirth;
-
+    private String dateOfBirth;   
+   
+    
+    @Column(name = "employer_name")
+    private String employerName;
+    
+    @Column(name = "monthly_income")
+    private String monthlyIncome;
+    
     @Column(name = "university")
     private String university;
-    
-    @Column(name = "cource")
-    private String cource;
-    
-    @Column(name = "cource_type")
-    private String courceType;
-    
-    @Column(name = "year_of_study")
-    private String yearOfStudy;
-    
     
     // Audit Columns
     @Column(name = "created_at")
