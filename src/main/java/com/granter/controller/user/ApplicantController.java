@@ -23,13 +23,9 @@ public class ApplicantController {
 	private final ManageApplicantService manageApplicantService;
 
 	@GetMapping("/detail")
-	public ResponseEntity<Object> getUserDetail(@RequestParam String email,
-			@RequestParam Boolean active
-			
-			) {
-
-		return manageApplicantService.getUserDetailByEmail(email,active);
-
+	public ResponseEntity<Object> getUserDetail(@RequestParam String email, @RequestParam Boolean active
+	) {
+		return manageApplicantService.getUserDetailByEmail(email, active);
 	}
 	
 	@PostMapping("/detail")

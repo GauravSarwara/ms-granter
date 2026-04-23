@@ -40,8 +40,12 @@ public class AuthController {
 	}
 	
 	@GetMapping("/verify")
-	public ResponseEntity<Object> verifyUser(@RequestParam String token) {
-		return userService.verifyAccount(token);	    
+	public ResponseEntity<Object> verifyUser(@RequestParam String emailToken,
+			@RequestParam String email,
+			@RequestParam String phooneNoToken
+			
+			) {
+		return userService.verifyAccount(emailToken,email,phooneNoToken);	    
 	}
 
 }

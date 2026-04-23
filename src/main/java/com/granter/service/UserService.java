@@ -11,6 +11,6 @@ public interface UserService {
 
 	ResponseEntity<Object> login(LoginRequest request);
 
-	ResponseEntity<Object> verifyAccount(String token);
+	ResponseEntity<Object> verifyAccount(String emailToken,String email,String phoneNoToken);
 
 }	

@@ -1,69 +1,62 @@
 package com.granter.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.time.OffsetDateTime;
+import java.util.List;
 
-@Data
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 @Entity
 @Table(name = "granter_application")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class GranterApplication {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔗 Many applications can belong to one user
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    // Business Fields
-    @Column(name = "address")
     private String address;
 
-    @Column(name = "status")
-    private Boolean status;
-    
-    @Column(name = "step")
-    private String step;
-    
-    @Column(name = "birth_date")
-    private String dateOfBirth;   
-   
-    
-    @Column(name = "employer_name")
-    private String employerName;
-    
-    @Column(name = "monthly_income")
-    private String monthlyIncome;
-    
-    @Column(name = "university")
-    private String university;
-    
-    // Audit Columns
-    @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    private String birthDate;
 
-    @Column(name = "created_by")
+    private Boolean status;
+
+    private String step;
+
+    private OffsetDateTime createdAt;
     private String createdBy;
 
-    @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
-
-    @Column(name = "updated_by")
     private String updatedBy;
 
-    // 🔹 Auto सेट audit fields
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = OffsetDateTime.now();
-        this.updatedAt = OffsetDateTime.now();
-    }
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = OffsetDateTime.now();
-    }
+    // 🔗 Mapping to professions
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ApplicationProfession> professions;
+
+    // 🔗 One-to-one mappings
+    @OneToOne(mappedBy = "application", cascade = CascadeType.ALL)
+    private StudentDetails studentDetails;
+
+    @OneToOne(mappedBy = "application", cascade = CascadeType.ALL)
+    private EmployedDetails employedDetails;
+
+    @OneToOne(mappedBy = "application", cascade = CascadeType.ALL)
+    private SelfEmployedDetails selfEmployedDetails;
 }

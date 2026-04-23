@@ -4,19 +4,27 @@ import lombok.Data;
 
 @Data
 public class ApplicantDetail {
-    private String address;
+	private String address;
 
-    private Boolean status;
-    
-    private String step;
-    
-    private String dateOfBirth;   
-   
-    
-    private String employerName;
-    
-    private String monthlyIncome;
-    
-    private String university;
-	
+	private Boolean status;
+
+	private String step;
+
+	private String dateOfBirth;
+
+	private String university;
+	private String course;
+	private String courseStartDate;
+	private String courseEndDate;
+	private String employerName;
+	private String employerEmail;
+	private String monthlySalary;
+	private String dateOfJoining;
+	private String contractType;
+	private String tradeName;
+	private String tradeType;
+	private String turnover;
+	private String profit;
+	private String yearsOfExperience;
+
 }
