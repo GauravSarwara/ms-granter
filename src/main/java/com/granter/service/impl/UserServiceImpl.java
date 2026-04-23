@@ -59,6 +59,10 @@ public class UserServiceImpl implements UserService {
 			var response=GenericResponsePojo.failure("User with this email already exists. ","");			
 			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
+		if(userData!=null && userData.getMobileNo()!=null) {
+			var response=GenericResponsePojo.failure("User with this Mobile number already exists. ","");			
+			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
 		
 		User user = new User();
 
@@ -85,7 +89,7 @@ public class UserServiceImpl implements UserService {
 		Map<String,String> data=new HashMap<>();
 		data.put("email", request.getEmail());
 		data.put("name", request.getFirstName()+" "+request.getLastName());
-		var response=GenericResponsePojo.success(data, "signup successfully.");
+		var response=GenericResponsePojo.success(data, "signup successfully.Otp sent on email and phone number.");
 		
 		return  ResponseEntity.ok(response);
 
@@ -125,7 +129,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<Object> verifyAccount(String emailtoken, String email, String phoneNoToken) {
 		User user = userRepository.findByEmail(email);
 		if (user != null && user.getEmailVerified()) {
-			var response = GenericResponsePojo.success("", "User verified successfully.");
+			var response = GenericResponsePojo.success("", "User already verified.");
 			return ResponseEntity.ok(response);
 		}
 		if (user != null && user.getEmailVerificationCode().equals(emailtoken)
@@ -150,6 +154,8 @@ public class UserServiceImpl implements UserService {
 						.builder().application(application).profession(profession).build()).toList();
 				applicationProfessionRepository.saveAll(mappings);
 			}
+		}else {
+			
 		}
 		var response = GenericResponsePojo.success("", "User verified successfully.");
 		return ResponseEntity.ok(response);
