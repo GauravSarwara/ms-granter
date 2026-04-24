@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.granter.constant.UrlConstant;
 import com.granter.request.ApplicationDetail;
 import com.granter.service.ManageApplicantService;
 
@@ -16,19 +17,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping(UrlConstant.USER_BASE_URL)
 @RequiredArgsConstructor
 public class ApplicantController {
 
 	private final ManageApplicantService manageApplicantService;
 
-	@GetMapping("/detail")
-	public ResponseEntity<Object> getUserDetail(@RequestParam String email, @RequestParam Boolean active
+	@GetMapping(UrlConstant.USER_DETAIL)
+	public ResponseEntity<Object> getUserDetail(@RequestParam
+			(required = true)String email, @RequestParam(required = true) Boolean active
 	) {
 		return manageApplicantService.getUserDetailByEmail(email, active);
 	}
 	
-	@PostMapping("/detail")
+	@PostMapping(UrlConstant.USER_DETAIL)
 	public ResponseEntity<Object> updateUserDetail(@RequestBody ApplicationDetail userDetail) {
 
 		return manageApplicantService.createApplicationDetail(userDetail);
