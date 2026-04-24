@@ -18,6 +18,7 @@ public class User {
 	private Long id;
 
 	private String firstName;
+	private String middleName;
 	private String lastName;
 	private String mobileNo;
 

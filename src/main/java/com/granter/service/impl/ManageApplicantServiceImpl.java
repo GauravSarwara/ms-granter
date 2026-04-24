@@ -59,11 +59,12 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
 
             userDetails.setEmail(email);
             userDetails.setFirstName(user.getFirstName());
+            userDetails.setMiddleName(user.getMiddleName());
             userDetails.setLastName(user.getLastName());
             userDetails.setMobileNo(user.getMobileNo());
             userDetails.setNationality(user.getNationality());
             userDetails.setProfessionType(user.getProfessionType());
-
+            userDetails.setUserNumber(String.format("U%08d", user.getId()));
             List<GranterApplication> applicantDetail = applicationRepository.findByUserId(user.getId());
 
             // ✅ Handle null or empty list
@@ -83,6 +84,7 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
                             .orElse(null);
 
                     if (application != null) {
+                    	 userDetails.setStep(application.getStep());
                         listOfApplicantDetails.add(filUserDetails(application));
                     } else {
                         log.warn("No active application found for user: {}", email);
@@ -125,7 +127,8 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
 		applicantData.setAddress(application.getAddress());
 		applicantData.setStatus(application.getStatus());
 		applicantData.setStep(application.getStep());
-		
+		applicantData.setDateOfBirth(application.getBirthDate());
+		applicantData.setAppNumber(String.format("AN%08d", application.getId()));
 		 // ✅ Profession-based mapping
 			if (application.getProfessions() != null) {
 
@@ -223,6 +226,7 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
 				log.info("Updating active application for user: {}", userDetail.getEmail());
 
 				application.setAddress(userDetail.getAddress());
+				application.setBirthDate(userDetail.getDateOfBirth());
 				var listOfProfessions = application.getProfessions();
 				for (ApplicationProfession applicationProfession : listOfProfessions) {
 
