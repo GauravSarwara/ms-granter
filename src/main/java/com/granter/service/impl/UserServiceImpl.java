@@ -133,6 +133,16 @@ public class UserServiceImpl implements UserService {
 			var response = GenericResponsePojo.success("", "User already verified.");
 			return ResponseEntity.ok(response);
 		}
+		if(user != null && !user.getEmailVerificationCode().equals(emailtoken)) {
+			
+			var response=GenericResponsePojo.failure("Email otp is invalid. ","");			
+			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		if(user != null && !user.getMobileVerificationCode().equals(phoneNoToken)) {
+			var response=GenericResponsePojo.failure("Mobile otp is invalid. ","");			
+			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+		
 		if (user != null && user.getEmailVerificationCode().equals(emailtoken)
 				&& user.getMobileVerificationCode().equals(phoneNoToken)) {
 			user.setEmailVerified(true);
@@ -156,7 +166,8 @@ public class UserServiceImpl implements UserService {
 				applicationProfessionRepository.saveAll(mappings);
 			}
 		}else {
-			
+			var response=GenericResponsePojo.failure("Invalid user Details ","");			
+			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
 		var response = GenericResponsePojo.success("", "User verified successfully.");
 		return ResponseEntity.ok(response);
