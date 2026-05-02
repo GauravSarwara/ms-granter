@@ -14,13 +14,17 @@ import com.granter.dto.UserDetails;
 import com.granter.entity.ApplicationProfession;
 import com.granter.entity.EmployedDetails;
 import com.granter.entity.GranterApplication;
+import com.granter.entity.PropertyDetails;
 import com.granter.entity.SelfEmployedDetails;
 import com.granter.entity.StudentDetails;
+import com.granter.entity.User;
 import com.granter.repository.EmployedDetailsRepository;
 import com.granter.repository.GranterApplicationRepository;
+import com.granter.repository.PropertyDetailsRepository;
 import com.granter.repository.SelfEmployedDetailsRepository;
 import com.granter.repository.StudentDetailsRepository;
 import com.granter.repository.UserRepository;
+import com.granter.request.ApplicantPropertyDetails;
 import com.granter.request.ApplicationDetail;
 import com.granter.service.ManageApplicantService;
 
@@ -37,6 +41,7 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
     private final EmployedDetailsRepository employedDetailsRepository;
     private final SelfEmployedDetailsRepository  selfEmployedDetailsRepository;
     private final StudentDetailsRepository studentDetailsRepository;
+    private final PropertyDetailsRepository propertyDetailsRepository;
 
     @Override
     public ResponseEntity<Object> getUserDetailByEmail(String email, Boolean active) {
@@ -74,7 +79,7 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
             } else {
 
                 List<ApplicantDetail> listOfApplicantDetails = new ArrayList<>();
-
+                List<ApplicantPropertyDetails> listOfPropertyDetails=new ArrayList<>();
                 if (Boolean.TRUE.equals(active)) {
                     log.info("Fetching only active application for user: {}", email);
 
@@ -86,6 +91,18 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
                     if (application != null) {
                     	 userDetails.setStep(application.getStep());
                         listOfApplicantDetails.add(filUserDetails(application));
+                        ApplicantPropertyDetails propertyDetail =new ApplicantPropertyDetails();
+                        PropertyDetails dbpropertyDetails=  propertyDetailsRepository.findByGranterApplicationId(application.getId());
+                      
+                        propertyDetail.setAccommodationType(dbpropertyDetails.getAccommodationType());
+                        propertyDetail.setLandlordName(dbpropertyDetails.getLandlordName());
+                        propertyDetail.setMonthlyRent(dbpropertyDetails.getMonthlyRent());
+                        propertyDetail.setTenancyEndDate(dbpropertyDetails.getTenancyEndDate());
+                        propertyDetail.setTenancyStartDate(dbpropertyDetails.getTenancyStartDate());
+                        propertyDetail.setPropertyAddress(dbpropertyDetails.getPropertyAddress());
+                        propertyDetail.setEmail(email);
+                        listOfPropertyDetails.add(propertyDetail);
+                        userDetails.setPropertyDetail(listOfPropertyDetails);
                     } else {
                         log.warn("No active application found for user: {}", email);
                     }
@@ -96,12 +113,26 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
                     for (GranterApplication granterApplication : applicantDetail) {
                         if (granterApplication != null) {
                             listOfApplicantDetails.add(filUserDetails(granterApplication));
+                            ApplicantPropertyDetails propertyDetail =new ApplicantPropertyDetails();
+                            PropertyDetails dbpropertyDetails=  propertyDetailsRepository.findByGranterApplicationId(granterApplication.getId());
+                          
+                            propertyDetail.setAccommodationType(dbpropertyDetails.getAccommodationType());
+                            propertyDetail.setLandlordName(dbpropertyDetails.getLandlordName());
+                            propertyDetail.setMonthlyRent(dbpropertyDetails.getMonthlyRent());
+                            propertyDetail.setTenancyEndDate(dbpropertyDetails.getTenancyEndDate());
+                            propertyDetail.setTenancyStartDate(dbpropertyDetails.getTenancyStartDate());
+                            propertyDetail.setPropertyAddress(dbpropertyDetails.getPropertyAddress());
+                            propertyDetail.setEmail(email);
+                            listOfPropertyDetails.add(propertyDetail);
+                            
+                        
                         }
                     }
                 }
-
+                userDetails.setPropertyDetail(listOfPropertyDetails);
                 userDetails.setAppData(listOfApplicantDetails);
             }
+            
 
             generaicResponse.setData(userDetails);
             generaicResponse.setMessage("Records fetched successfully.");
@@ -294,4 +325,108 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
             return ResponseEntity.internalServerError().body(generaicResponse);
         }
     }
+
+	@Override
+	public ResponseEntity<Object> createUserPropertyDetail(ApplicantPropertyDetails applicantPropertyDetails) {
+		GeneraicResponse generaicResponse = new GeneraicResponse();
+
+        try {
+            log.info("createUserPropertyDetail application for email: {}", applicantPropertyDetails.getEmail());
+
+            if (applicantPropertyDetails.getEmail() == null || applicantPropertyDetails.getEmail().isEmpty()) {
+                log.warn("Email is missing in request");
+                generaicResponse.setMessage("Email is required");
+                generaicResponse.setSuccess("false");
+                return ResponseEntity.badRequest().body(generaicResponse);
+            }
+            User user=userRepository.findByEmail(applicantPropertyDetails.getEmail());
+            List<GranterApplication> applicantDetail = applicationRepository.findByUserId(user.getId());
+
+            if (applicantDetail == null || applicantDetail.isEmpty()) {
+                log.warn("No applications found for user: {}", applicantPropertyDetails.getEmail());
+                generaicResponse.setMessage("Application not found");
+                generaicResponse.setSuccess("false");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(generaicResponse);
+            }
+
+            var application = applicantDetail.stream()
+                    .filter(li -> Boolean.TRUE.equals(li.getStatus()))
+                    .findAny()
+                    .orElse(null);
+            GeneraicResponse validate=   validateApplicantPropertyDetails(applicantPropertyDetails);
+            if(validate!=null) {
+            	return ResponseEntity.badRequest().body(validate);
+            }
+            PropertyDetails propertyDetails=new PropertyDetails();
+            propertyDetails.setAccommodationType(applicantPropertyDetails.getAccommodationType());
+            propertyDetails.setLandlordName(applicantPropertyDetails.getLandlordName());
+            propertyDetails.setPropertyAddress(applicantPropertyDetails.getPropertyAddress());
+            propertyDetails.setTenancyStartDate(applicantPropertyDetails.getTenancyStartDate());
+            propertyDetails.setTenancyEndDate(applicantPropertyDetails.getTenancyEndDate());
+            propertyDetails.setMonthlyRent(applicantPropertyDetails.getMonthlyRent());
+            propertyDetails.setGranterApplication(application);;;
+            propertyDetailsRepository.save(propertyDetails);
+            application.setStep("2");
+            applicationRepository.save(application);
+            generaicResponse.setMessage("User property detail created successfully.");
+			generaicResponse.setSuccess("true");
+
+			return ResponseEntity.ok(generaicResponse);
+            
+            
+        }catch (Exception e) {
+        	e.printStackTrace();
+        	  log.error("Error while creating/updating application Property for email: {}", applicantPropertyDetails.getEmail(), e);
+              generaicResponse.setMessage("An error occurred");
+              generaicResponse.setSuccess("false");
+              return ResponseEntity.internalServerError().body(generaicResponse);
+		}
+	}
+	
+	private GeneraicResponse validateApplicantPropertyDetails(ApplicantPropertyDetails req) {
+
+	    if (req.getEmail() == null || req.getEmail().isEmpty()) {
+	        log.warn("Email is missing in request");
+	        return buildError("Email is required");
+	    }
+
+	    if (req.getAccommodationType() == null || req.getAccommodationType().isEmpty()) {
+	        log.warn("Accommodation type is missing in request");
+	        return buildError("Accommodation type is required");
+	    }
+
+	    if (req.getLandlordName() == null || req.getLandlordName().isEmpty()) {
+	        log.warn("Landlord name is missing in request");
+	        return buildError("Landlord name is required");
+	    }
+
+	    if (req.getPropertyAddress() == null || req.getPropertyAddress().isEmpty()) {
+	        log.warn("Property address is missing in request");
+	        return buildError("Property address is required");
+	    }
+
+	    if (req.getMonthlyRent() == null || req.getMonthlyRent().isEmpty()) {
+	        log.warn("Monthly rent is missing in request");
+	        return buildError("Monthly rent is required");
+	    }
+
+	    if (req.getTenancyStartDate() == null || req.getTenancyStartDate().isEmpty()) {
+	        log.warn("Tenancy start date is missing in request");
+	        return buildError("Tenancy start date is required");
+	    }
+
+	    if (req.getTenancyEndDate() == null || req.getTenancyEndDate().isEmpty()) {
+	        log.warn("Tenancy end date is missing in request");
+	        return buildError("Tenancy end date is required");
+	    }
+
+	    return null; // ✅ means validation passed
+	}
+	
+	private GeneraicResponse buildError(String message) {
+		GeneraicResponse generaicResponse=new GeneraicResponse();
+	    generaicResponse.setMessage(message);
+	    generaicResponse.setSuccess("false");
+	    return generaicResponse;
+	}
 }

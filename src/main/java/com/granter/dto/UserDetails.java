@@ -2,6 +2,8 @@ package com.granter.dto;
 
 import java.util.List;
 
+import com.granter.request.ApplicantPropertyDetails;
+
 import lombok.Data;
 
 @Data
@@ -17,6 +19,7 @@ public class UserDetails {
 	private String nationality;
 	private String step;
 	private List<ApplicantDetail> appData;
+	private List<ApplicantPropertyDetails> propertyDetail;
 
 	
 }

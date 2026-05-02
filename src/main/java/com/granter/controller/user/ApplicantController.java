@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.granter.constant.UrlConstant;
+import com.granter.request.ApplicantPropertyDetails;
 import com.granter.request.ApplicationDetail;
 import com.granter.service.ManageApplicantService;
 
@@ -34,6 +35,13 @@ public class ApplicantController {
 	public ResponseEntity<Object> updateUserDetail(@RequestBody ApplicationDetail userDetail) {
 
 		return manageApplicantService.createApplicationDetail(userDetail);
+
+	}
+	
+	@PostMapping(UrlConstant.PROPERTY_DETAIL)
+	public ResponseEntity<Object> createUserPropertyDetail(@RequestBody ApplicantPropertyDetails applicantPropertyDetails) {
+
+		return manageApplicantService.createUserPropertyDetail(applicantPropertyDetails);
 
 	}
 	
