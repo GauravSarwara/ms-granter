@@ -93,7 +93,9 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
                         listOfApplicantDetails.add(filUserDetails(application));
                         ApplicantPropertyDetails propertyDetail =new ApplicantPropertyDetails();
                         PropertyDetails dbpropertyDetails=  propertyDetailsRepository.findByGranterApplicationId(application.getId());
-                      
+                        if(dbpropertyDetails != null){
+
+                        
                         propertyDetail.setAccommodationType(dbpropertyDetails.getAccommodationType());
                         propertyDetail.setLandlordName(dbpropertyDetails.getLandlordName());
                         propertyDetail.setMonthlyRent(dbpropertyDetails.getMonthlyRent());
@@ -103,6 +105,7 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
                         propertyDetail.setEmail(email);
                         listOfPropertyDetails.add(propertyDetail);
                         userDetails.setPropertyDetail(listOfPropertyDetails);
+                        }
                     } else {
                         log.warn("No active application found for user: {}", email);
                     }
