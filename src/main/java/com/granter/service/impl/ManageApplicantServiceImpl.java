@@ -546,7 +546,7 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
 				dataPayload.setActivities(listOfActivities);
 				konfirRequest.setData(dataPayload);
 				KonfirResponse konfirResponse=konfirService.createVerification(konfirRequest);
-				generaicResponse.setData(konfirResponse);
+				generaicResponse.setData(konfirResponse.getMeta());
 				generaicResponse.setMessage("Request intiated");
 				generaicResponse.setSuccess("true");
 
