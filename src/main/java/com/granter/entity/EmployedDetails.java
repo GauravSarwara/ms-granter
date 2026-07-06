@@ -1,5 +1,8 @@
 package com.granter.entity;
 
+import java.util.UUID;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,6 +32,9 @@ public class EmployedDetails {
     private String monthlySalary;
     private String dateOfJoining;
     private String contractType;
+    
+    @Column(name = "employee_id", nullable = false, unique = true, updatable = false)
+    private UUID employeeId;
 
     @OneToOne
     @JoinColumn(name = "application_id", nullable = false)

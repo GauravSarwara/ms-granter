@@ -1,4 +1,4 @@
-package com.granter.controller.user;
+package com.granter.user.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,17 +33,19 @@ public class ApplicantController {
 	
 	@PostMapping(UrlConstant.USER_DETAIL)
 	public ResponseEntity<Object> updateUserDetail(@RequestBody ApplicationDetail userDetail) {
-
 		return manageApplicantService.createApplicationDetail(userDetail);
-
 	}
 	
 	@PostMapping(UrlConstant.PROPERTY_DETAIL)
 	public ResponseEntity<Object> createUserPropertyDetail(@RequestBody ApplicantPropertyDetails applicantPropertyDetails) {
-
 		return manageApplicantService.createUserPropertyDetail(applicantPropertyDetails);
-
 	}
 	
+	@GetMapping(UrlConstant.KONFIR_VERIFICATION)
+	public ResponseEntity<Object> konfirVerification(@RequestParam
+			(required = true)String email
+	) {
+		return manageApplicantService.getVerifyKonfir(email);
+	}
 
 }

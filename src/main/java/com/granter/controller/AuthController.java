@@ -48,5 +48,13 @@ public class AuthController {
 			) {
 		return userService.verifyAccount(emailToken,email,phoneNoToken);	    
 	}
+	
+	@PostMapping("/webhook")
+	public ResponseEntity<Object> webHook(@RequestBody String request) {
+
+		log.info("API login called");
+		System.out.println(request);
+		return ResponseEntity.ok("success");
+	}
 
 }

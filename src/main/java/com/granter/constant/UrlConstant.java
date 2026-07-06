@@ -9,5 +9,6 @@ public class UrlConstant {
 	public static final String USER_BASE_URL="/api/v1/user";
 	public static final String USER_DETAIL = "/detail";
 	public static final String PROPERTY_DETAIL = "/property/detail";
+	public static final String KONFIR_VERIFICATION = "/konfir/verification";
 
 }

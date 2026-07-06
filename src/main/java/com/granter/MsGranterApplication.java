@@ -9,4 +9,5 @@ public class MsGranterApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(MsGranterApplication.class, args);
 	}
+	
 }

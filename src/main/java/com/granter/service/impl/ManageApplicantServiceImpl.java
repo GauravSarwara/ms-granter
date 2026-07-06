@@ -1,6 +1,10 @@
 package com.granter.service.impl;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +22,11 @@ import com.granter.entity.PropertyDetails;
 import com.granter.entity.SelfEmployedDetails;
 import com.granter.entity.StudentDetails;
 import com.granter.entity.User;
+import com.granter.integrate.request.Activity;
+import com.granter.integrate.request.DataPayload;
+import com.granter.integrate.request.KonfirRequest;
+import com.granter.integrate.request.Meta;
+import com.granter.integrate.response.KonfirResponse;
 import com.granter.repository.EmployedDetailsRepository;
 import com.granter.repository.GranterApplicationRepository;
 import com.granter.repository.PropertyDetailsRepository;
@@ -27,6 +36,7 @@ import com.granter.repository.UserRepository;
 import com.granter.request.ApplicantPropertyDetails;
 import com.granter.request.ApplicationDetail;
 import com.granter.service.ManageApplicantService;
+import com.granter.utility.KonfirService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +52,7 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
     private final SelfEmployedDetailsRepository  selfEmployedDetailsRepository;
     private final StudentDetailsRepository studentDetailsRepository;
     private final PropertyDetailsRepository propertyDetailsRepository;
-
+    private final KonfirService konfirService; 
     @Override
     public ResponseEntity<Object> getUserDetailByEmail(String email, Boolean active) {
 
@@ -124,7 +134,7 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
                             propertyDetail.setPropertyAddress(dbpropertyDetails.getPropertyAddress());
                             propertyDetail.setEmail(email);
                             listOfPropertyDetails.add(propertyDetail);
-                            
+                          
                         
                         }
                     }
@@ -428,5 +438,147 @@ public class ManageApplicantServiceImpl implements ManageApplicantService {
 	    generaicResponse.setMessage(message);
 	    generaicResponse.setSuccess("false");
 	    return generaicResponse;
+	}
+
+	@Override
+	public ResponseEntity<Object> getVerifyKonfir(String email) {
+		GeneraicResponse generaicResponse = new GeneraicResponse();
+		try {
+			var user = userRepository.findByEmail(email);
+			// ✅ Null check for user
+			if (user == null) {
+				log.warn("User not found for email: {}", email);
+				generaicResponse.setMessage("User not found");
+				generaicResponse.setSuccess("false");
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(generaicResponse);
+			}
+
+			KonfirRequest konfirRequest = new KonfirRequest();
+			DataPayload dataPayload = new DataPayload();
+			
+			
+			
+			List<GranterApplication> applicantDetail = applicationRepository.findByUserId(user.getId());
+			var application = applicantDetail.stream().filter(li -> Boolean.TRUE.equals(li.getStatus())).findAny()
+					.orElse(null);
+			
+			dataPayload.setFirstName(user.getFirstName());
+			dataPayload.setLastName(user.getLastName());
+			dataPayload.setPhoneNumber(user.getMobileNo());
+			dataPayload.setDateOfBirth(convertDate(application.getBirthDate()));
+			dataPayload.setNewEmployerName(user.getFirstName()+" "+user.getLastName());
+			dataPayload.setEmail(email);
+			
+			
+			List<Activity> listOfActivities = new ArrayList<>();
+			Meta meta = new Meta();
+			meta.setRedirectUrl("https://www.konfir.com");
+			meta.setState("candidateid=123&test=verified");
+			meta.setWebhookUrl("https://webhook-api.free.beeceptor.com");
+			konfirRequest.setMeta(meta);
+			if (application.getProfessions() != null) {
+				for (ApplicationProfession ap : application.getProfessions()) {
+					String professionName = ap.getProfession().getName();
+					Activity activity = new Activity();
+					switch (professionName) {
+
+					case "STUDENT":
+
+						StudentDetails student = application.getStudentDetails();
+						if (student != null) {
+
+							activity.setType("education");
+							activity.setIsCurrent(true);
+							activity.setStartDate(convertDate(student.getCourseStartDate()));
+							activity.setEndDate(convertDate(student.getCourseEndDate()));
+							activity.setVerifyViaKonfir(true);
+							activity.setInstitution(student.getUniversity());
+
+						}
+						break;
+
+					case "EMPLOYED":
+
+						EmployedDetails employed = application.getEmployedDetails();
+						if (employed != null) {
+
+							activity.setVerifyViaKonfir(true);
+							activity.setIsCurrent(true);
+							activity.setStartDate(convertDate(employed.getDateOfJoining()));
+							// activity.setEndDate(convertDate(employed.getCourseEndDate()));
+							activity.setType("employment");
+							activity.setCustomId("C00" + employed.getId());
+							activity.setEmployerId(employed.getEmployeeId().toString());
+							activity.setEmployerName(employed.getEmployerName());
+							activity.setJobTitle(email);
+							String monthlySalary = employed.getMonthlySalary();
+							if (monthlySalary != null && !monthlySalary.trim().isEmpty()) {
+								BigDecimal annualIncome = new BigDecimal(monthlySalary.trim())
+										.multiply(BigDecimal.valueOf(12));
+								activity.setDeclaredAnnualIncome(annualIncome);
+							}
+						}
+						break;
+
+					case "SELF_EMPLOYED":
+
+						SelfEmployedDetails selfEmp = application.getSelfEmployedDetails();
+						StudentDetails student1 = application.getStudentDetails();
+						if (selfEmp != null) {
+							activity.setType("self_employment");
+							activity.setVerifyViaKonfir(true);
+							activity.setIsCurrent(true);
+							activity.setStartDate(convertDate(student1.getCourseStartDate()));
+							
+							activity.setCustomId("C00" + selfEmp.getId());
+						}
+						break;
+
+					default:
+						log.warn("Unknown profession type: {}", professionName);
+					}
+
+					listOfActivities.add(activity);
+				}
+				dataPayload.setActivities(listOfActivities);
+				konfirRequest.setData(dataPayload);
+				KonfirResponse konfirResponse=konfirService.createVerification(konfirRequest);
+				generaicResponse.setData(konfirResponse);
+				generaicResponse.setMessage("Request intiated");
+				generaicResponse.setSuccess("true");
+
+	            return ResponseEntity.ok(generaicResponse);
+			}
+	        } catch (Exception e) {
+	            log.error("Error while fetching user details for email: {}", email, e);
+	            generaicResponse.setMessage("An error occurred");
+	            generaicResponse.setSuccess("false");
+	            return ResponseEntity.internalServerError().body(generaicResponse);
+	        }
+		return  ResponseEntity.ok(generaicResponse);
+	}
+	private String convertDate(String courseStartDate) {
+	    if (courseStartDate == null || courseStartDate.trim().isEmpty()) {
+	        return null;
+	    }
+
+	    try { 
+	        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+	        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+	        return LocalDate.parse(courseStartDate.trim(), inputFormatter)
+	                .format(outputFormatter);
+
+	    } catch (DateTimeParseException e) {
+	        // Log the exception if you're using a logger
+	        // log.error("Invalid date format: {}", courseStartDate, e);
+
+	        return null;
+	    } catch (Exception e) {
+	        // Log unexpected exceptions
+	        // log.error("Error while converting date: {}", courseStartDate, e);
+
+	        return null;
+	    }
 	}
 }

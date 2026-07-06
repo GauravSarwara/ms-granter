@@ -12,4 +12,6 @@ public interface ManageApplicantService {
 
 	ResponseEntity<Object> createUserPropertyDetail(ApplicantPropertyDetails applicantPropertyDetails);
 
+	ResponseEntity<Object> getVerifyKonfir(String email);
+
 }
