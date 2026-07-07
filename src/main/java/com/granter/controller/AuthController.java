@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.granter.constant.UrlConstant;
 import com.granter.dto.LoginRequest;
 import com.granter.dto.SignupRequest;
+import com.granter.request.VerificationCompletedWebhook;
+import com.granter.service.ManageApplicantService;
 import com.granter.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthController {
 
 	private final UserService userService;
-	
+	private final ManageApplicantService manageApplicantService;
+
 	@PostMapping(UrlConstant.AUTH_SIGNUP)
 	public ResponseEntity<Object> signup(@RequestBody SignupRequest request) {
 
@@ -50,11 +53,25 @@ public class AuthController {
 	}
 	
 	@PostMapping("/webhook")
-	public ResponseEntity<Object> webHook(@RequestBody String request) {
-
+	public ResponseEntity<Object> webHook(@RequestBody VerificationCompletedWebhook request) {
 		log.info("API login called");
 		System.out.println(request);
-		return ResponseEntity.ok("success");
+		return manageApplicantService.konfirVerifiedByWebHook(request);		
+	}
+	
+	//candidateid="+user.getId()+"&verified=true
+	
+	@GetMapping("/verified/konfir")
+	public ResponseEntity<Object> rediractVarification(@RequestParam Long candidateid,
+			@RequestParam Boolean verified
+			) {
+
+		log.info("API login called");
+		System.out.println("candidateid user id:"+candidateid);
+		System.out.println("candidateid verified:"+verified);
+		
+		return manageApplicantService.konfirVerified(candidateid,verified);
+	
 	}
 
 }
