@@ -36,7 +36,7 @@ public class SendMessageUtil {
 	private String fromNumber;
 
 	public void sendVerificationEmail(String toEmail, String token) {
-
+		try {
 		String subject = "Verify Your Account";
 		String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
 		String body = "Dear User,\n\n" + " Your verifcation code is:\n" + encodedToken
@@ -48,6 +48,9 @@ public class SendMessageUtil {
 		message.setText(body);
 
 		mailSender.send(message);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private final RestTemplate restTemplate = new RestTemplate();
