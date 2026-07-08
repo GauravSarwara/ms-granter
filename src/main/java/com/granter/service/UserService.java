@@ -13,4 +13,8 @@ public interface UserService {
 
 	ResponseEntity<Object> verifyAccount(String emailToken,String email,String phoneNoToken);
 
+	ResponseEntity<Object> forgotPasswordByEmail(String email);
+
+	ResponseEntity<Object> passwordUpdate(String otp, String email);
+
 }	

@@ -32,7 +32,7 @@ public class AuthController {
 
 		log.info("API signup called");
 		return userService.signup(request);
-		
+
 	}
 
 	@PostMapping(UrlConstant.AUTH_LOGIN)
@@ -42,36 +42,44 @@ public class AuthController {
 
 		return userService.login(request);
 	}
-	
+
 	@GetMapping(UrlConstant.AUTH_VERIFY)
 	public ResponseEntity<Object> verifyUser(@RequestParam(required = true) String emailToken,
-			@RequestParam(required = true) String email,
-			@RequestParam(required = true) String phoneNoToken
-			
-			) {
-		return userService.verifyAccount(emailToken,email,phoneNoToken);	    
+			@RequestParam(required = true) String email, @RequestParam(required = true) String phoneNoToken
+
+	) {
+		return userService.verifyAccount(emailToken, email, phoneNoToken);
 	}
-	
-	@PostMapping("/webhook")
+	@GetMapping(UrlConstant.FORGOT_PASSWORD)
+	public ResponseEntity<Object> forgotPasswordUser(
+			@RequestParam(required = true) String email
+	) {
+		return userService.forgotPasswordByEmail(email);
+	}
+
+	@GetMapping(UrlConstant.PASSWORD_UPDATE)
+	public ResponseEntity<Object> passwordUpdate(@RequestParam(required = true) String otp,
+			@RequestParam(required = true) String email
+	) {
+		return userService.passwordUpdate(otp, email);	
+	}
+	@PostMapping(UrlConstant.KONFIR_WEBHOOK_VERIFICATION)
 	public ResponseEntity<Object> webHook(@RequestBody VerificationCompletedWebhook request) {
 		log.info("API login called");
 		System.out.println(request);
-		return manageApplicantService.konfirVerifiedByWebHook(request);		
+		return manageApplicantService.konfirVerifiedByWebHook(request);
 	}
-	
-	//candidateid="+user.getId()+"&verified=true
-	
-	@GetMapping("/verified/konfir")
-	public ResponseEntity<Object> rediractVarification(@RequestParam Long candidateid,
-			@RequestParam Boolean verified
-			) {
+
+
+	@GetMapping(UrlConstant.KONFIR_VERIFIER)
+	public ResponseEntity<Object> rediractVarification(@RequestParam Long candidateid, @RequestParam Boolean verified) {
 
 		log.info("API login called");
-		System.out.println("candidateid user id:"+candidateid);
-		System.out.println("candidateid verified:"+verified);
-		
-		return manageApplicantService.konfirVerified(candidateid,verified);
-	
+		System.out.println("candidateid user id:" + candidateid);
+		System.out.println("candidateid verified:" + verified);
+
+		return manageApplicantService.konfirVerified(candidateid, verified);
+
 	}
 
 }

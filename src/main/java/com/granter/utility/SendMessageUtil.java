@@ -3,6 +3,7 @@ package com.granter.utility;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 @Component
 public class SendMessageUtil {
 
@@ -34,22 +37,34 @@ public class SendMessageUtil {
 
 	@Value("${twilio.from.number}")
 	private String fromNumber;
+	
+	@Value("${sms.api.url}")
+	private String smsApiUrl;
 
-	public void sendVerificationEmail(String toEmail, String token) {
+	@Value("${sms.api.key}")
+	private String apiKey;
+
+
+	@Value("${sms.sender}")
+	private String sender;
+
+	public boolean sendVerificationEmail(String toEmail, String token) {
 		try {
-		String subject = "Verify Your Account";
-		String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
-		String body = "Dear User,\n\n" + " Your verifcation code is:\n" + encodedToken
-				+ "\n\n" + "If you did not register, please ignore this email.\n\n" + "Thanks & Regards,\nGranter Team";
+			String subject = "Verify Your Account";
+			String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+			String body = "Dear User,\n\n" + " Your verifcation code is:\n" + encodedToken + "\n\n"
+					+ "If you did not register, please ignore this email.\n\n" + "Thanks & Regards,\nGranter Team";
 
-		SimpleMailMessage message = new SimpleMailMessage();
-		message.setTo(toEmail);
-		message.setSubject(subject);
-		message.setText(body);
+			SimpleMailMessage message = new SimpleMailMessage();
+			message.setTo(toEmail);
+			message.setSubject(subject);
+			message.setText(body);
 
-		mailSender.send(message);
+			mailSender.send(message);
+			return true;
 		}catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		}
 	}
 
@@ -62,8 +77,10 @@ public class SendMessageUtil {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-			
-			headers.set("Authorization", "Basic QUM1ZmZhYjc0MmMzMzBkNGM2NTY1YTg5ODc1MWJiZTFlOTpjYTc0NGI3MGI0MmE5MzExZDdmNDU5NjY0MzhkMjlkNg==");
+			String auth = accountSid + ":" + authToken;
+	        String encodedAuth = Base64.getEncoder()
+	                .encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+			headers.set("Authorization", "Basic "+encodedAuth);
 
 			MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
 			map.add("To", to);
@@ -81,4 +98,45 @@ public class SendMessageUtil {
 		return null;
 	}
 
+	public String sendSmsUsingRestTemplate(String phoneNumber, String message) {
+
+	    try {
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.setContentType(MediaType.APPLICATION_JSON);
+	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+	        headers.set("Authorization", "App " + apiKey);
+
+	        String requestBody = String.format("""
+	                {
+	                  "messages": [
+	                    {
+	                      "from": "%s",
+	                      "destinations": [
+	                        {
+	                          "to": "%s"
+	                        }
+	                      ],
+	                      "text": "%s"
+	                    }
+	                  ]
+	                }
+	                """, sender, phoneNumber, message);
+
+	        HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+
+	        ResponseEntity<String> response = restTemplate.postForEntity(
+	                smsApiUrl + "/sms/2/text/advanced",
+	                entity,
+	                String.class);
+
+	        log.info("SMS API Response Status : {}", response.getStatusCode());
+	        log.info("SMS API Response Body   : {}", response.getBody());
+
+	        return response.getBody();
+
+	    } catch (Exception ex) {
+	        log.error("Failed to send SMS", ex);
+	        return null;
+	    }
+	}
 }

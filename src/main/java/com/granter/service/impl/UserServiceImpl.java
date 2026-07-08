@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
 		sendMessageUtil.sendVerificationEmail(request.getEmail(),mailOTP);
 		// need to send the OTP for phone number
 		sendMessageUtil.sendSms(request.getMobileNo(), "Your verifcation code is: "+mobileOTP);
-		
+		//sendMessageUtil.sendSmsUsingRestTemplate(request.getMobileNo(), "Your verifcation code is: "+mobileOTP);
 		log.info("User saved {}", request.getEmail());
 		Map<String,String> data=new HashMap<>();
 		data.put("email", request.getEmail());
@@ -171,6 +171,46 @@ public class UserServiceImpl implements UserService {
 		}
 		var response = GenericResponsePojo.success("", "User verified successfully.");
 		return ResponseEntity.ok(response);
+	}
+
+
+	@Override
+	public ResponseEntity<Object> forgotPasswordByEmail(String email) {
+		Map<String,String> forgotJson=new HashMap<>();
+		try {
+			var userData=userRepository.findByEmail(email);
+			if(userData==null) {
+				var response=GenericResponsePojo.failure("User with this email not exits. ","");			
+				return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+			}
+			if (!userData.getEmailVerified()) {
+				var response = GenericResponsePojo.failure("", "User is not verified.");
+				return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+			}
+			String mobileOTP=generateOtp();
+			Boolean isEmailSent=sendMessageUtil.sendVerificationEmail(email,mobileOTP);
+			String smsSent=sendMessageUtil.sendSms(userData.getMobileNo(), "Your verifcation code is: "+mobileOTP);
+			if (isEmailSent || smsSent != null) {
+				forgotJson.put("mobileNo", userData.getMobileNo());
+				forgotJson.put("email", email);
+				var response = GenericResponsePojo.success(forgotJson, "Otp sent to email and phone no.");
+				return ResponseEntity.ok(response);
+			}else {
+				var response=GenericResponsePojo.failure("Internal server error. Please try Again later. ","");			
+				return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			var response=GenericResponsePojo.failure("Internal server error. Please try Again later. ","");			
+			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
+	}
+
+
+	@Override
+	public ResponseEntity<Object> passwordUpdate(String otp, String email) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
