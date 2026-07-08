@@ -13,5 +13,6 @@ public class UrlConstant {
 	public static final String PROPERTY_DETAIL = "/property/detail";
 	public static final String KONFIR_WEBHOOK_VERIFICATION = "/webhook";
 	public static final String KONFIR_VERIFIER = "/verified/konfir";
+	public static final String KONFIR_VERIFICATION = "/konfir/verification";
 
 }
